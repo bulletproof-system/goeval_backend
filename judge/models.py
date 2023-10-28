@@ -1,19 +1,18 @@
 from django.db import models
-
+from django.contrib.auth.models import AbstractUser
 MAX_LEN = 50  # 字符串最大长度
 MAX_LEN_LONG = 2000  # 字符串最大长度(长)
 
 
 # 用户
 class User(models.Model):
-    uid = models.IntegerField(primary_key=True, verbose_name='用户id')
+    id = models.AutoField(primary_key=True, verbose_name='用户id')
     username = models.CharField(max_length=MAX_LEN, verbose_name='用户名')
     password = models.CharField(max_length=MAX_LEN, verbose_name='密码')
     email = models.CharField(max_length=MAX_LEN, verbose_name='邮箱')
     avatar = models.CharField(max_length=MAX_LEN_LONG, verbose_name='头像')
     permission = models.IntegerField(verbose_name='权限')  # 0:普通用户 1:管理员
-    last_login_time = models.DateTimeField(verbose_name='上次登录时间')
-
+    last_login = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.username
 
@@ -116,7 +115,7 @@ class Like(models.Model):
     class Meta:
         db_table = 'like'
         constraints = [
-            models.UniqueConstraint(fields=['user_id', 'review_id'], name='primary_key')
+            models.UniqueConstraint(fields=['user_id', 'review_id'], name='primary_key1')
         ]
 
 
@@ -128,7 +127,7 @@ class Star(models.Model):
     class Meta:
         db_table = 'star'
         constraints = [
-            models.UniqueConstraint(fields=['user_id', 'course_id'], name='primary_key')
+            models.UniqueConstraint(fields=['user_id', 'course_id'], name='primary_key2')
         ]
 
 
@@ -140,5 +139,5 @@ class TagCourse(models.Model):
     class Meta:
         db_table = 'tag_course'
         constraints = [
-            models.UniqueConstraint(fields=['tag_id', 'course_id'], name='primary_key')
+            models.UniqueConstraint(fields=['tag_id', 'course_id'], name='primary_key3')
         ]

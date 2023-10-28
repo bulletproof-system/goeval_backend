@@ -23,9 +23,11 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/', include('user.urls')),
+    path('judge/', include('judge.urls')),
     path('restapi/', include(router.urls)),
     path('restapi-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
