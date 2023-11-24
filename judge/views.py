@@ -70,7 +70,7 @@ def Login(request):
                          'success': True,
                          'info':
                              {'token': token,
-                              'userinfo':
+                              'userInfo':
                                   {'username': username,
                                    'avatar': user.avatar,
                                    'email': user.email,
