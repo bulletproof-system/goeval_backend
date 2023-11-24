@@ -74,9 +74,8 @@ def Login(request):
                                   {'username': username,
                                    'avatar': user.avatar,
                                    'email': user.email,
-                                   'role' : 0}
-                              },
-                         'reason': 'login.error.auth'
+                                   'role' : user.permission}
+                              }
                          })
 
 
