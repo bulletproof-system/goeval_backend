@@ -310,20 +310,94 @@ def detail(request):
 
 
 
-# def acqAnnouncement(request):
-#
-#
-#
+def acqAnnouncement(request):
+    announcements = []
+    for announcement in models.Announcement.objects.all():
+        announcements.append({
+            'aid': announcement.aid,
+            'title': announcement.title,
+            'content': announcement.content,
+            'datetime': announcement.date
+        })
+
+    return JsonResponse(announcements, safe=False)
+
+
+
 # def acqNotification(request):
 #
 #
 #
-# def signRead(request):
-#
-#
-# def changePassword(request):
-#
-#
+def signRead(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    obj = json.loads(request.body)
+    nid = obj.get('nid', None)
+    userInfo = jwt.decode(token,
+                          "secret",
+                          algorithms=["HS256"],
+                          headers=headers)
+    username = userInfo.get("username")
+
+    lastLoginTime = userInfo.get("logintime")
+    if not models.User.objects.filter(username=username):
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.read.dont.exists.user'
+                             })
+
+    nowTime = datetime.now();
+    lastTime = datetime.strptime(lastLoginTime, "%Y-%m-%d %H:%M:%S")
+    timeDelta = nowTime - lastTime
+    gapSeconds = timeDelta.seconds
+    if (gapSeconds >= 60 * 60 * 2):
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.read.overtime'
+                             })
+
+    notification = models.Notification.objects.get(nid = nid)
+    notification.status = 1
+    notification.save()
+    return JsonResponse({
+        'success': "True"
+    })
+
+def changePassword(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    obj = json.loads(request.body)
+    oldPassword = obj.get('oldPassword', None)
+    newPassword = obj.get('newPassword', None)
+    userInfo = jwt.decode(token,
+                          "secret",
+                          algorithms=["HS256"],
+                          headers=headers)
+    username = userInfo.get("username")
+
+    lastLoginTime = userInfo.get("logintime")
+    if not models.User.objects.filter(username=username):
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.operate.password.dont.exists.user'
+                             })
+
+    nowTime = datetime.now();
+    lastTime = datetime.strptime(lastLoginTime, "%Y-%m-%d %H:%M:%S")
+    timeDelta = nowTime - lastTime
+    gapSeconds = timeDelta.seconds
+    if (gapSeconds >= 60 * 60 * 2):
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.operate.password.overtime'
+                             })
+    user = models.User.objects.get(username=username)
+    password = user.password
+    if password != oldPassword:
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.operate.password.wrong.password'
+                             })
+
+    user.password = newPassword
+    user.save()
+    return JsonResponse({
+        'success': True,
+        'reason': 'correct'
+    })
 
 def check_string(re_exp, str):
     res = re.search(re_exp, str)
