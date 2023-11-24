@@ -6,7 +6,7 @@ MAX_LEN_LONG = 2000  # 字符串最大长度(长)
 
 # 用户
 class User(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name='用户id')
+    uid = models.IntegerField(primary_key=True, verbose_name='用户id')
     username = models.CharField(max_length=MAX_LEN, verbose_name='用户名')
     password = models.CharField(max_length=MAX_LEN, verbose_name='密码')
     email = models.CharField(max_length=MAX_LEN, verbose_name='邮箱')
@@ -18,6 +18,16 @@ class User(models.Model):
 
     class Meta:
         db_table = 'user'
+
+class Teacher(models.Model):
+    tid = models.IntegerField(primary_key=True, verbose_name='老师id')
+    teacher_name = models.CharField(max_length=MAX_LEN, verbose_name='老师姓名')
+
+    def __str__(self):
+        return self.teacher_name
+
+    class Meta:
+        db_table = 'teacher'
 
 
 # 课程
@@ -52,7 +62,7 @@ class Review(models.Model):
     date = models.DateTimeField(verbose_name='创建时间')
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者id')
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='课程id')
-    teachers = models.CharField(max_length=MAX_LEN, verbose_name='教师')
+
 
     def __str__(self):
         return self.content
@@ -140,4 +150,25 @@ class TagCourse(models.Model):
         db_table = 'tag_course'
         constraints = [
             models.UniqueConstraint(fields=['tag_id', 'course_id'], name='primary_key3')
+        ]
+
+#评价-老师对应关系表
+class ReviewTeacher(models.Model):
+    review_id = models.ForeignKey(Review, on_delete=models.CASCADE, verbose_name='评价id')
+    teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='老师id')
+    class Meta:
+        db_table = 'review_teacher'
+        constraints = [
+            models.UniqueConstraint(fields=['review_id', 'teacher_id'], name='primary_key4')
+        ]
+
+#课程-教师对应关系表
+class CourseTeacher(models.Model):
+    course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='课程id')
+    teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='老师id')
+
+    class Meta:
+        db_table = 'course_teacher'
+        constraints = [
+            models.UniqueConstraint(fields=['course_id', 'teacher_id'], name='primary_key5')
         ]

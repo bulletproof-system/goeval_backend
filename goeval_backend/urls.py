@@ -23,11 +23,11 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
-
+FERFIX = 'm1/3441811-0-default/'
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('judge/', include('judge.urls')),
-    path('restapi/', include(router.urls)),
-    path('restapi-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path(FERFIX + 'admin/', admin.site.urls),
+    path(FERFIX + 'api/', include('judge.urls')),
+    path(FERFIX + 'restapi/', include(router.urls)),
+    path(FERFIX + 'restapi-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
