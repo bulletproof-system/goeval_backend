@@ -27,28 +27,28 @@ def Login(request):
     username = obj.get('username', None)
     password = obj.get('password', None)
     if username is None or password is None:
-        return JsonResponse({'code': 200,
-                             'success':False,
+        return JsonResponse({
+                            'success':False,
                              'Info':None,
                              'reason': 'login.error.format'})
     try:
 
         user = models.User.objects.get(username = username)
     except:
-        return JsonResponse({'code': 200,
+        return JsonResponse({
                              'success': False,
                              'Info': None,
                              'reason': 'login.error.auth'})
 
     if user.password != password:
-        return  JsonResponse({'code': 200,
+        return  JsonResponse({
                               'success': False,
                               'Info': None,
                               'reason': 'login.error.auth'
                               })
 
     if user is None:
-        return JsonResponse({'code': 200,
+        return JsonResponse({
                              'success': False,
                              'Info': None,
                              'reason': 'login.error.auth'
@@ -66,9 +66,9 @@ def Login(request):
                        algorithm="HS256",
                        headers=headers).decode('ascii')
 
-    return JsonResponse({'code': 200,
+    return JsonResponse({
                          'success': True,
-                         'Info':
+                         'info':
                              {'token': token,
                               'userinfo':
                                   {'username': username,
@@ -93,14 +93,14 @@ def Register(request):
     if avatar is None:
         avatar = "default"
     if uid is None or username is None or password is None:
-        return JsonResponse({'code': 200,
+        return JsonResponse({
                              'success': False,
                              'Info': None,
                              'reason': 'register.error.format'
                              })
     
     if models.User.objects.filter(username = username):
-        return JsonResponse({'code': 200,
+        return JsonResponse({
                              'success': False,
                              'Info': None,
                              'reason': 'register.error.samename'
@@ -120,7 +120,7 @@ def Register(request):
                        headers=headers).decode('ascii')
 
 
-    return JsonResponse({'code': 200,
+    return JsonResponse({
                          'success': True,
                          'Info':{
                              'token': token,

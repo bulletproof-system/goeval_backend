@@ -70,6 +70,13 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
+    # 全局配置异常模块
+    'EXCEPTION_HANDLER': 'utils.exception.custom_exception_handler',
+    # 修改默认返回JSON的renderer的类
+    'DEFAULT_RENDERER_CLASSES': (
+        'utils.rendererresponse.customrenderer',
+    ),
+
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
