@@ -62,7 +62,7 @@ class Review(models.Model):
     date = models.DateTimeField(verbose_name='创建时间')
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者id')
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='课程id')
-
+    rating = models.IntegerField(verbose_name='课程评分', default=0)
 
     def __str__(self):
         return self.content

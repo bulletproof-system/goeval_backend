@@ -297,7 +297,7 @@ def detail(request):
             'avatar': user.avatar,
             'datetime': review.date,
             'content': review.content,
-            'rating': 0
+            'rating': review.rating
         })
 
     return JsonResponse({
