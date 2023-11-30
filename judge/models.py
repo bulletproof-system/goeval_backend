@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
 MAX_LEN = 50  # 字符串最大长度
 MAX_LEN_LONG = 2000  # 字符串最大长度(长)
 
@@ -13,18 +14,30 @@ class User(models.Model):
     avatar = models.CharField(max_length=MAX_LEN_LONG, verbose_name='头像')
     permission = models.IntegerField(verbose_name='权限')  # 0:普通用户 1:管理员
     last_login = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return self.username
 
+    def __int__(self):
+        return self.uid
+
+    def getUserInfo(self):
+        userInfo = {
+            'uid': self.uid,
+            'username': self.username,
+            'avatar': self.avatar,
+            'email': self.email,
+            'role': self.permission,
+            'lasr_login': self.last_login
+        }
+        return userInfo
     class Meta:
         db_table = 'user'
+
 
 class Teacher(models.Model):
     tid = models.IntegerField(primary_key=True, verbose_name='老师id')
     teacher_name = models.CharField(max_length=MAX_LEN, verbose_name='老师姓名')
 
-    def __str__(self):
-        return self.teacher_name
+    def __int__(self):
+        return self.tid
 
     class Meta:
         db_table = 'teacher'
@@ -35,9 +48,10 @@ class Course(models.Model):
     cid = models.IntegerField(primary_key=True, verbose_name='课程id')
     school = models.CharField(max_length=MAX_LEN, verbose_name='学习名称')
     name = models.CharField(max_length=MAX_LEN, verbose_name='课程名')
+    description = models.CharField(max_length=MAX_LEN_LONG, verbose_name='课程简介', default='课程简介')
 
-    def __str__(self):
-        return self.name
+    def __int__(self):
+        return self.cid
 
     class Meta:
         db_table = 'course'
@@ -48,8 +62,8 @@ class Tag(models.Model):
     tid = models.IntegerField(primary_key=True, verbose_name='标签id')
     content = models.CharField(max_length=MAX_LEN, verbose_name='内容')
 
-    def __str__(self):
-        return self.content
+    def __int__(self):
+        return self.tid
 
     class Meta:
         db_table = 'tag'
@@ -64,8 +78,8 @@ class Review(models.Model):
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='课程id')
     rating = models.IntegerField(verbose_name='课程评分', default=0)
 
-    def __str__(self):
-        return self.content
+    def __int__(self):
+        return self.rid
 
     class Meta:
         db_table = 'review'
@@ -79,8 +93,8 @@ class Comment(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='创建者id')
     review_id = models.ForeignKey(Review, on_delete=models.CASCADE, verbose_name='评价id')
 
-    def __str__(self):
-        return self.content
+    def __int__(self):
+        return self.cid
 
     class Meta:
         db_table = 'comment'
@@ -93,13 +107,33 @@ class Notification(models.Model):
     date = models.DateTimeField(verbose_name='发送日期')
     status = models.IntegerField(verbose_name='状态')  # 1:已读 0:未读
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='接收者id')
-    review_id = models.ForeignKey(Review, on_delete=models.CASCADE, verbose_name='评价id')
 
-    def __str__(self):
-        return self.content
+    def __int__(self):
+        return self.nid
 
     class Meta:
         db_table = 'notification'
+
+
+class NewReviewNotification(Notification):
+
+    review_id = models.ForeignKey(Review, on_delete=models.CASCADE, verbose_name='新增评价')
+
+    def __int__(self):
+        return self.nid
+
+    class Meta:
+        db_table = 'newreviewnotification'
+
+
+class NewCommentNotification(Notification):
+    comment_id = models.ForeignKey(Comment, on_delete=models.CASCADE, verbose_name='新增评论')
+
+    def __int__(self):
+        return self.nid
+
+    class Meta:
+        db_table = 'newcommentnotification'
 
 
 # 公告
@@ -110,8 +144,16 @@ class Announcement(models.Model):
     date = models.DateTimeField(verbose_name='发布日期')
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='发布者id')
 
-    def __str__(self):
-        return self.title
+    def __int__(self):
+        return self.aid
+
+    def getAnnInfo(self):
+        return {
+            'aid': self.aid,
+            'title': self.title,
+            'content': self.content,
+            'datetime': self.date
+        }
 
     class Meta:
         db_table = 'announcement'
@@ -152,17 +194,20 @@ class TagCourse(models.Model):
             models.UniqueConstraint(fields=['tag_id', 'course_id'], name='primary_key3')
         ]
 
-#评价-老师对应关系表
+
+# 评价-老师对应关系表
 class ReviewTeacher(models.Model):
     review_id = models.ForeignKey(Review, on_delete=models.CASCADE, verbose_name='评价id')
     teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='老师id')
+
     class Meta:
         db_table = 'review_teacher'
         constraints = [
             models.UniqueConstraint(fields=['review_id', 'teacher_id'], name='primary_key4')
         ]
 
-#课程-教师对应关系表
+
+# 课程-教师对应关系表
 class CourseTeacher(models.Model):
     course_id = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='课程id')
     teacher_id = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name='老师id')

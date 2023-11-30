@@ -1,3 +1,5 @@
+import shutil
+
 import jwt
 from django.shortcuts import render
 import re
@@ -15,11 +17,10 @@ from . import models
 import time
 from datetime import datetime
 import random
-
-
-headers = {
-    'alg': "HS256",
-}
+from .func import *
+import os
+from PIL import Image
+from django.core.files.storage import FileSystemStorage
 
 
 def Login(request):
@@ -28,31 +29,26 @@ def Login(request):
     password = obj.get('password', None)
     if username is None or password is None:
         return JsonResponse({
-                            'success':False,
-                             'Info':None,
-                             'reason': 'login.error.format'})
+            'success': False,
+            'reason': 'login.error.format'})
     try:
-
-        user = models.User.objects.get(username = username)
+        user = models.User.objects.get(username=username)
     except:
         return JsonResponse({
-                             'success': False,
-                             'Info': None,
-                             'reason': 'login.error.auth'})
+            'success': False,
+            'reason': 'login.error.auth'})
 
     if user.password != password:
-        return  JsonResponse({
-                              'success': False,
-                              'Info': None,
-                              'reason': 'login.error.auth'
-                              })
+        return JsonResponse({
+            'success': False,
+            'reason': 'login.error.auth'
+        })
 
     if user is None:
         return JsonResponse({
-                             'success': False,
-                             'Info': None,
-                             'reason': 'login.error.auth'
-                             })
+            'success': False,
+            'reason': 'login.error.auth'
+        })
 
     # login(request, user)
     # jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -67,50 +63,49 @@ def Login(request):
                        headers=headers).decode('ascii')
 
     return JsonResponse({
-                         'success': True,
-                         'info':
-                             {'token': token,
-                              'userInfo':
-                                  {'username': username,
-                                   'avatar': user.avatar,
-                                   'email': user.email,
-                                   'role' : user.permission}
-                              }
-                         })
+        'success': True,
+        'info':
+            {'token': token,
+             'userInfo':
+                 {'username': username,
+                  'avatar': user.avatar,
+                  'email': user.email,
+                  'role': user.permission}
+             }
+    })
 
 
 def Register(request):
     obj = json.loads(request.body)
     username = obj.get('username', None)
     password = obj.get('password', None)
-    uid = random.randint(1,10000)
-    while models.User.objects.filter(uid = uid).exists():
-        uid = random.randint(1,10000)
+    email = obj.get('email', None)
+    uid = random.randint(1, 10000)
+    while models.User.objects.filter(uid=uid).exists():
+        uid = random.randint(1, 10000)
 
-    avatar = 'cute tiger'
-    permission = 0
-    email = 'default'
-    if avatar is None:
-        avatar = "default"
-    if uid is None or username is None or password is None:
+    avatar = defaultAvatar
+    permission = normalUser
+
+    if uid is None or not isLegalUN(username) is None or not isLegalPW(password):
         return JsonResponse({
-                             'success': False,
-                             'Info': None,
-                             'reason': 'register.error.format'
-                             })
-    
-    if models.User.objects.filter(username = username):
+            'success': False,
+            'info': None,
+            'reason': 'register.error.format'
+        })
+
+    if models.User.objects.filter(username=username):
         return JsonResponse({
-                             'success': False,
-                             'Info': None,
-                             'reason': 'register.error.samename'
-                             })
-    models.User.objects.create(uid = uid,
-                               username = username,
-                               password = password,
-                               email = email,
-                               avatar = avatar,
-                               permission = permission)
+            'success': False,
+            'info': None,
+            'reason': 'register.error.samename'
+        })
+    models.User.objects.create(uid=uid,
+                               username=username,
+                               password=password,
+                               email=email,
+                               avatar=avatar,
+                               permission=permission)
 
     token = jwt.encode({"username": username,
                         "logintime": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -119,53 +114,61 @@ def Register(request):
                        algorithm="HS256",
                        headers=headers).decode('ascii')
 
-
     return JsonResponse({
-                         'success': True,
-                         'Info':{
-                             'token': token,
-                             'userinfo':
-                                 {'username': username,
-                                  'avatar': avatar,
-                                  'email': email,
-                                  'role': 0
-                                  }
-                         },
-                          'reason': None
-                         })
+        'success': True,
+        'info': {
+            'token': token,
+            'userinfo':
+                {'username': username,
+                 'avatar': avatar,
+                 'email': email,
+                 'role': 0
+                 }
+        },
+        'reason': None
+    })
 
 
 # 下面的3个装饰器全部来自from引用，相当与给接口增加了用户权限校验和token校验
 
 def get_info(request):
     token = request.META.get('HTTP_AUTHORIZATION')
-    userInfo = jwt.decode(token,
-                          "secret",
-                          algorithms=["HS256"],
-                          headers=headers)
+    authToken = verifyToken(token)
+    # 没有提供token  那么也返回游客信息
+    if authToken == NO_TOKEN_ERROR:
+        return JsonResponse({'username': 'Visitor',
+                             'avatar': 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor',
+                             'role': 0
+                             })
+
+    # 如果解析错误那么返回游客信息
+    if authToken == FORMAT_TOKEN_ERROR:
+        return JsonResponse({'username': 'Visitor',
+                             'avatar': 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor',
+                             'role': 0
+                             })
+
+    # 不存在这个人也返回token信息
+    if authToken == NO_USER_ERROR:
+        return JsonResponse({'username': 'Visitor',
+                             'avatar': 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor',
+                             'role': 0
+                             })
+
+    if authToken == OVER_TIME_ERROR:
+        return JsonResponse({
+            'reason': 'getInfo.error.overtime'
+        }, status=errorStatus)
+
+    userInfo = getUserInfo(token)
+
     username = userInfo.get("username")
-    lastLoginTime = userInfo.get("logintime")
-    if not models.User.objects.filter(username=username):
-        return JsonResponse({'code': 401,
-                             'reason': 'getInfo.error.dontexsitsuser'
-                             })
-
-    nowTime = datetime.now();
-    lastTime = datetime.strptime(lastLoginTime, "%Y-%m-%d %H:%M:%S")
-    timeDelta = nowTime - lastTime
-    gapSeconds = timeDelta.seconds
-    if(gapSeconds >= 60 * 60 * 2):
-        return JsonResponse({'code': 401,
-                             'reason': 'getInfo.error.overtime'
-                             })
-
     user = models.User.objects.filter(username=username)[0]
     return JsonResponse({'username': username,
                          'avatar': user.avatar,
                          'email': user.email,
                          'role': user.permission
                          })
-
 
 
 def recCourse(request):
@@ -178,30 +181,29 @@ def recCourse(request):
         courses = models.Course.objects.all()
         for course in courses:
             cid = course.cid
-            coTes = models.CourseTeacher.objects.filter(course_id = cid)
-            teachers = []
-            for coTe in coTes:
-                teacher_id = coTe.teacher_id
-                teacher = models.Teacher.objects.get(teacher_name = teacher_id)
-                teachers.append(teacher.teacher_name)
-            res.append({'id': str(course.cid),
+            teachers = getTeachers(cid)
+            tagsInfo = getTags(cid)
+            res.append({'id': course.cid,
                         'name': course.name,
                         'school': course.school,
-                        'teacher': teachers})
+                        'teacher': teachers,
+                        'tag': tagsInfo})
         return JsonResponse(res, safe=False)
 
-    select = []
     if num > 20:
         num = 20
     top = models.Course.objects.all().count()
-    while select.count() == num:
-        rand = random.randint(0, top - 1)
-        if rand not in select:
-            course = models.Course.objects.all()[rand]
-            res.append({'id': str(course.cid),
-                        'name': course.name,
-                        'school': course.school,
-                        'teacher': []})
+    select = random.sample(range(0, top - 1), num)
+    for rand in select:
+        course = models.Course.objects.all()[rand]
+        cid = course.cid
+        teachers = getTeachers(cid)
+        tagsInfo = getTags(cid)
+        res.append({'id': course.cid,
+                    'name': course.name,
+                    'school': course.school,
+                    'teacher': teachers,
+                    'tag': tagsInfo})
 
     return JsonResponse(res, safe=False)
 
@@ -211,28 +213,22 @@ def seaCourse(request):
     key = obj.get('key', None)
     courses = models.Course.objects.all()
     res = []
-    for course in courses :
-        cid = str(course.cid)
+    for course in courses:
+        cid = course.cid
         name = course.name
         school = course.school
-        set = cid + name + school
+        set = str(cid) + name + school
         if key in set:
             cid = course.cid
-            coTes = models.CourseTeacher.objects.filter(course_id=cid)
-            teachers = []
-            for coTe in coTes:
-                teacher_id = coTe.teacher_id
-                teacher = models.Teacher.objects.get(teacher_name=teacher_id)
-                teachers.append(teacher.teacher_name)
-            res.append({'id': str(course.cid),
+            teachers = getTeachers(cid)
+            tagsInfo = getTags(cid)
+            res.append({'id': course.cid,
                         'name': course.name,
                         'school': course.school,
-                        'teacher': teachers})
+                        'teacher': teachers,
+                        'tag': tagsInfo})
 
     return JsonResponse(res, safe=False)
-
-
-
 
 
 def autocomplete(request):
@@ -244,8 +240,8 @@ def autocomplete(request):
         name = course.name
         if key in name:
             res.append({
-                'type' : 0,
-                'value' : name
+                'type': 0,
+                'value': name
             })
         school = course.school
         if key in school:
@@ -256,7 +252,7 @@ def autocomplete(request):
     teachers = models.Teacher.objects.all()
     for teacher in teachers:
         teacher_name = teacher.teacher_name
-        if key in  teacher_name:
+        if key in teacher_name:
             res.append({
                 'type': 2,
                 'value': teacher_name
@@ -275,38 +271,6 @@ def autocomplete(request):
 
 
 
-def detail(request):
-    obj = json.loads(request.body)
-    cid = obj.get('id', None)
-    course = models.Course.objects.get(cid = cid)
-    coTes = models.CourseTeacher.objects.filter(course_id=cid)
-    teachers = []
-    for coTe in coTes:
-        teacher_id = coTe.teacher_id
-        teacher = models.Teacher.objects.get(teacher_name=teacher_id)
-        teachers.append(teacher.teacher_name)
-
-    reviews = models.Review.objects.filter(course_id = cid)
-    revJsons = []
-    for review in reviews:
-        user_id = review.user_id
-        user = models.User.objects.get(uid = user_id)
-        revJsons.append({
-            'username': user.username,
-            'avatar': user.avatar,
-            'datetime': review.date,
-            'content': review.content,
-            'rating': review.rating
-        })
-
-    return JsonResponse({
-        'id': cid,
-        'name': course.name,
-        'school': course.school,
-        'teacher': teachers,
-        'reviews': revJsons
-    })
-
 
 
 def acqAnnouncement(request):
@@ -322,74 +286,123 @@ def acqAnnouncement(request):
     return JsonResponse(announcements, safe=False)
 
 
+def acqNotification(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
 
-# def acqNotification(request):
-#
-#
-#
+    models.NewCommentNotification.objects.create(nid=4,
+                                                content="you are a pig",
+                                                date="2023-11-12",
+                                                status=0,
+                                                user_id=models.User.objects.get(uid=1),
+                                                comment_id=models.Comment.objects.get(cid=1))
+    userInfo = getUserInfo(token)
+    username = userInfo.get("username")
+    user = models.User.objects.get(username=username)
+    notifications = models.NewReviewNotification.objects.filter(user_id=user.uid)
+    resInfo = []
+    for notification in notifications:
+        nid = notification.nid
+        datetime = notification.date
+        status = notification.status
+        review = notification.review_id
+        course = review.course_id
+        course_name = course.name
+        ntype = reviewNotification
+        resInfo.append({
+            'nid': nid,
+            'course_id': course.cid,
+            'course_name': course_name,
+            'review_id': review.rid,
+            'datetime': datetime,
+            'status': status,
+            'ntype': ntype
+        })
+
+    notifications = models.NewCommentNotification.objects.filter(user_id=user.uid)
+    for notification in notifications:
+        nid = notification.nid
+        datetime = notification.date
+        status = notification.status
+        comment = notification.comment_id
+        review = comment.review_id
+        course = review.course_id
+        course_name = course.name
+        ntype = commentNotification
+        resInfo.append({
+            'nid': nid,
+            'course_id': course.cid,
+            'course_name': course_name,
+            'review_id': review.rid,
+            'comment_id': comment.cid,
+            'datetime': datetime,
+            'status': status,
+            'ntype': ntype
+        })
+
+
+    # data = json.loads(resInfo)
+    # sorted_data = sorted(data, cmp=lambda x, y: (
+    #     x[datetime] < y[datetime] if x[status] == y[status] else y[status] - x[status]))
+    return JsonResponse(resInfo, safe=False)
+
+
 def signRead(request):
     token = request.META.get('HTTP_AUTHORIZATION')
+
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False
+                             },
+                            status=errorStatus)
+
     obj = json.loads(request.body)
     nid = obj.get('nid', None)
-    userInfo = jwt.decode(token,
-                          "secret",
-                          algorithms=["HS256"],
-                          headers=headers)
-    username = userInfo.get("username")
 
-    lastLoginTime = userInfo.get("logintime")
-    if not models.User.objects.filter(username=username):
-        return JsonResponse({'success': False,
-                             'reason': 'userInfo.read.dont.exists.user'
-                             })
+    if nid is None:
+        return JsonResponse({'success': False
+                             },
+                            status=errorStatus)
 
-    nowTime = datetime.now();
-    lastTime = datetime.strptime(lastLoginTime, "%Y-%m-%d %H:%M:%S")
-    timeDelta = nowTime - lastTime
-    gapSeconds = timeDelta.seconds
-    if (gapSeconds >= 60 * 60 * 2):
-        return JsonResponse({'success': False,
-                             'reason': 'userInfo.read.overtime'
-                             })
-
-    notification = models.Notification.objects.get(nid = nid)
+    notification = models.Notification.objects.get(nid=nid)
     notification.status = 1
     notification.save()
     return JsonResponse({
         'success': "True"
     })
 
+
 def changePassword(request):
     token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
     obj = json.loads(request.body)
     oldPassword = obj.get('oldPassword', None)
     newPassword = obj.get('newPassword', None)
-    userInfo = jwt.decode(token,
-                          "secret",
-                          algorithms=["HS256"],
-                          headers=headers)
+
+    userInfo = getUserInfo(token)
+
     username = userInfo.get("username")
-
-    lastLoginTime = userInfo.get("logintime")
-    if not models.User.objects.filter(username=username):
-        return JsonResponse({'success': False,
-                             'reason': 'userInfo.operate.password.dont.exists.user'
-                             })
-
-    nowTime = datetime.now();
-    lastTime = datetime.strptime(lastLoginTime, "%Y-%m-%d %H:%M:%S")
-    timeDelta = nowTime - lastTime
-    gapSeconds = timeDelta.seconds
-    if (gapSeconds >= 60 * 60 * 2):
-        return JsonResponse({'success': False,
-                             'reason': 'userInfo.operate.password.overtime'
-                             })
     user = models.User.objects.get(username=username)
     password = user.password
-    if password != oldPassword:
+
+    if not isLegalPW(oldPassword) or password != oldPassword:
         return JsonResponse({'success': False,
-                             'reason': 'userInfo.operate.password.wrong.password'
-                             })
+                             'reason': 'userInfo.operate.password.auth'
+                             }, status=successStatus)
+
+    if not isLegalPW(newPassword):
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.operate.password.format'
+                             }, status=successStatus)
 
     user.password = newPassword
     user.save()
@@ -398,45 +411,27 @@ def changePassword(request):
         'reason': 'correct'
     })
 
-def check_string(re_exp, str):
-    res = re.search(re_exp, str)
-    if res:
-        return True
-    else:
-        return False
 
 def changeEmail(request):
     token = request.META.get('HTTP_AUTHORIZATION')
+
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
     obj = json.loads(request.body)
     email = obj.get('email', None)
-    if not check_string('^[a-z0-9A-Z]+[- | a-z0-9A-Z . _]+@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-z]{2,}$',email):
+    if not isLegalEmail(email):
         return JsonResponse({
             'success': False,
             'reason': 'userInfo.operate.email.format'
 
         })
 
-    userInfo = jwt.decode(token,
-                          "secret",
-                          algorithms=["HS256"],
-                          headers=headers)
+    userInfo = getUserInfo(token)
     username = userInfo.get("username")
-
-    lastLoginTime = userInfo.get("logintime")
-    if not models.User.objects.filter(username=username):
-        return JsonResponse({'success': 401,
-                             'reason': 'userInfo.operate.email.error.dontexsitsuser'
-                             })
-
-    nowTime = datetime.now();
-    lastTime = datetime.strptime(lastLoginTime, "%Y-%m-%d %H:%M:%S")
-    timeDelta = nowTime - lastTime
-    gapSeconds = timeDelta.seconds
-    if(gapSeconds >= 60 * 60 * 2):
-        return JsonResponse({'success': 401,
-                             'reason': 'userInfo.operate.email.error.overtime'
-                             })
-
     user = models.User.objects.get(username=username)
     user.email = email
     user.save()
@@ -444,6 +439,47 @@ def changeEmail(request):
         'success': True,
         'reason': 'correct'
     })
+
+
+def uploadAvatar(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+    if not os.path.exists(BASE_DIR):
+        os.mkdir(BASE_DIR)
+
+    pic = request.FILES["file"]
+    FileSystemStorage(location=BASE_DIR).save(pic.name, pic)
+    return JsonResponse({
+        'success': True
+    })
+
+
+def getStarList(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+
+
+    authToken = verifyToken(token)
+
+    if authToken == NO_TOKEN_ERROR or authToken == NO_AUTH_ERROR:
+        return JsonResponse({})
+
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
+    userInfo = getUserInfo(token)
+    username = userInfo.get('username')
+    user_id = models.User.objects.get(username=username).uid
+    starList = getUserStarList(user_id)
+
+    return JsonResponse(starList, safe=False)
+
 
 
 
