@@ -21,8 +21,8 @@ headers = {
 }
 
 
-# BASE_DIR = '.\\judge\\asset\\image'
-BASE_DIR = '/asset/image'
+BASE_DIR = '.\\judge\\asset\\image'
+# BASE_DIR = '/asset/image'
 defaultAvatar = 'cute Tiger'
 manager = 2
 normalUser = 1
@@ -36,6 +36,8 @@ reviewNotification = 0
 commentNotification = 1
 
 MAX_REVIEW_NUM = 10000
+
+FILE_MAX_SIZE = 2 * 1024 * 1024 #2MB
 
 MANAGER_INVAILD = JsonResponse({
     'success': False,
@@ -150,6 +152,9 @@ def isLegalUN(username):
         return True
     return False
 
+FILE_REG = '^\w*\.(jpeg|png|gif)'
+def isLegalAvatar(pic_name):
+    return check_string(FILE_REG, pic_name)
 
 NO_TOKEN_ERROR = 0
 FORMAT_TOKEN_ERROR = 1
@@ -409,3 +414,5 @@ def getCourseInfo(course):
         'tag': getTags(course.cid),
         'description': course.description
     }
+
+

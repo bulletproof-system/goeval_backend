@@ -448,6 +448,18 @@ def uploadAvatar(request):
         os.mkdir(BASE_DIR)
 
     pic = request.FILES["file"]
+    pic_name = pic.name
+    if not isLegalAvatar(pic_name):
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.operate.avatar.type'
+                             })
+
+    if pic.size > FILE_MAX_SIZE:
+        return JsonResponse({'success': False,
+                             'reason': 'userInfo.operate.avatar.size'
+                             })
+
+
     FileSystemStorage(location=BASE_DIR).save(pic.name, pic)
     return JsonResponse({
         'success': True
