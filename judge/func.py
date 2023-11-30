@@ -21,7 +21,7 @@ headers = {
 }
 
 
-BASE_DIR = '.\\judge\\asset\\image'
+BASE_DIR = '/asset/image'
 defaultAvatar = 'cute Tiger'
 manager = 2
 normalUser = 1
