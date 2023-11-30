@@ -87,7 +87,7 @@ def Register(request):
     avatar = defaultAvatar
     permission = normalUser
 
-    if uid is None or not isLegalUN(username) is None or not isLegalPW(password):
+    if uid is None or not isLegalUN(username) or not isLegalPW(password):
         return JsonResponse({
             'success': False,
             'info': None,

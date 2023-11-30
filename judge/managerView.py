@@ -464,6 +464,33 @@ def addAnnoucement(request):
     })
 
 
+def getTeacherList(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    teachers = models.Teacher.objects.all()
+    teaInfo = []
+    for teacher in teachers:
+        teaInfo.append(teacher.teacher_name)
+
+    return JsonResponse(teaInfo, safe=False)
+
+
+def getTagsList(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    tags = models.Tag.objects.all()
+    tagInfo = []
+    for tag in tags:
+        tagInfo.append(tag.content)
+
+    return JsonResponse(tagInfo, safe=False)
+
 
 
 

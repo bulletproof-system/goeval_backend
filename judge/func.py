@@ -21,7 +21,7 @@ headers = {
 }
 
 
-#BASE_DIR = '.\\judge\\asset\\image'
+# BASE_DIR = '.\\judge\\asset\\image'
 BASE_DIR = '/asset/image'
 defaultAvatar = 'cute Tiger'
 manager = 2
@@ -104,18 +104,25 @@ def getTags(cid):
     return tagsInfo
 
 
-def getReviews(cid):
+def getReviews(cid, uid):
     reviews = models.Review.objects.filter(course_id=cid)
     revJsons = []
     for review in reviews:
         user_id = review.user_id
         user = models.User.objects.get(uid=user_id)
+        count = models.Like.objects.filter(review_id=review.rid).count()
+        liked = False
+        if models.Like.objects.filter(review_id=review.rid, user_id=uid):
+            liked = True
         revJsons.append({
+            'id': review.rid,
             'username': user.username,
             'avatar': user.avatar,
             'datetime': review.date,
             'content': review.content,
-            'rating': review.rating
+            'rating': review.rating,
+            'count': count,
+            'liked': liked
         })
     return revJsons
 

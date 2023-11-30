@@ -45,7 +45,8 @@ def detail(request):
                              'reason': 'TokenFail'
                              }, status=errorStatus)
 
-
+    username = getUserInfo(token).get('username')
+    uid = models.User.objects.get(username=username).uid
     obj = json.loads(request.body)
     cid = obj.get('id', None)
     course = models.Course.objects.get(cid=cid)
@@ -53,13 +54,14 @@ def detail(request):
     teachers = getTeachers(cid)
     tagsInfo = getTags(cid)
 
-    revJsons = getReviews(cid)
+    revJsons = getReviews(cid,uid)
     return JsonResponse({
         'id': cid,
         'name': course.name,
         'school': course.school,
         'teacher': teachers,
         'tag': tagsInfo,
+        'description': course.description,
         'reviews': revJsons
     })
 
@@ -157,6 +159,31 @@ def replyReview(request):
         return JsonResponse({
             'ret': 0
         })
+
+
+def like(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+    obj = json.loads(request.body)
+    rid = obj.get('id', None)
+    username = getUserInfo(token).get('username')
+    uid = models.User.objects.get(username=username)
+    likes = models.Like.objects.filter(user_id=uid, review_id=rid)
+    if likes.count() > 0:
+        like = likes[0]
+        like.delete()
+    else:
+        models.Like.objects.create(
+            user_id=models.User.objects.get(uid=uid),
+            review_id=models.Review.objects.get(rid=rid)
+        )
+    return JsonResponse({
+        'success': True
+    })
 
 
 

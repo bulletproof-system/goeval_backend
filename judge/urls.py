@@ -28,6 +28,7 @@ urlpatterns = [
     path('review', courseDetailView.review),
     path('comments', courseDetailView.acqComments),
     path('reply', courseDetailView.replyReview),
+    path('like', courseDetailView.like),
 
 #管理员界面
     path(MANAGER_VIEW_USER_PREFIX + 'list', managerView.getUserList),
@@ -45,4 +46,9 @@ urlpatterns = [
     path(MANAGER_VIEW_ANNOUNCEMENT_PREFIX + 'delete', managerView.deleteAnnouncement),
     path(MANAGER_VIEW_ANNOUNCEMENT_PREFIX + 'edit', managerView.modifyAnnouncement),
     path(MANAGER_VIEW_ANNOUNCEMENT_PREFIX + 'add', managerView.addAnnoucement),
+
+    path(MANAGER_VIEW_COURSE_PREFIX + 'teacherlist', managerView.getTeacherList),
+    path(MANAGER_VIEW_COURSE_PREFIX + 'taglist', managerView.getTagsList),
+
+
 ]
