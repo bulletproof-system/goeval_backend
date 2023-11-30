@@ -77,6 +77,11 @@ def genAnnouncementId():
         return 1
     return announcements[0].aid + 1
 
+def genNotificationId():
+    notifications = models.Notification.objects.all().order_by('-nid')
+    if len(notifications) == 0:
+        return 1
+    return notifications[0].nid + 1
 def getTeachers(cid):
     coTes = models.CourseTeacher.objects.filter(course_id=cid)
     teachers = []

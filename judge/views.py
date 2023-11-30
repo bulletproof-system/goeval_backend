@@ -294,12 +294,7 @@ def acqNotification(request):
                              'reason': 'TokenFail'
                              }, status=errorStatus)
 
-    models.NewCommentNotification.objects.create(nid=4,
-                                                content="you are a pig",
-                                                date="2023-11-12",
-                                                status=0,
-                                                user_id=models.User.objects.get(uid=1),
-                                                comment_id=models.Comment.objects.get(cid=1))
+
     userInfo = getUserInfo(token)
     username = userInfo.get("username")
     user = models.User.objects.get(username=username)

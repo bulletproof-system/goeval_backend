@@ -38,6 +38,14 @@ def collect(request):
         })
 
 def detail(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS or authToken != NO_AUTH_ERROR:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
+
     obj = json.loads(request.body)
     cid = obj.get('id', None)
     course = models.Course.objects.get(cid=cid)
@@ -57,8 +65,17 @@ def detail(request):
 
 
 def review(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
+
+
     obj = json.loads(request.body)
-    username = obj.get('username', None)
+    username = getUserInfo(token).get('username')
     content = obj.get('content', None)
     rating = obj.get('rating', None)
     cid = obj.get('id', None)
@@ -74,6 +91,15 @@ def review(request):
             course_id=models.Course.objects.get(cid=cid),
             rating=rating
         )
+        nid = genNotificationId()
+        models.NewReviewNotification.objects.create(
+            nid=nid,
+            content=models.Course.objects.get(cid=cid).name,
+            date=datetime.now(),
+            status=0,
+            user_id=models.User.objects.get(username=username),
+            review_id=models.Review.objects.get(rid=rid)
+        )
         return JsonResponse({
             'ret': 1
         })
@@ -83,6 +109,7 @@ def review(request):
         })
 
 def acqComments(request):
+
     obj = json.loads(request.body)
     rid = obj.get('id', None)
     comInfo = getComments(rid)
@@ -91,9 +118,17 @@ def acqComments(request):
     })
 
 def replyReview(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
+
     obj = json.loads(request.body)
     rid = obj.get('id', None)
-    username = obj.get('username', None)
+    username = getUserInfo(token).get('username')
     content = obj.get('content', None)
     if rid and username and content:
         user = models.User.objects.get(username=username)
@@ -104,6 +139,16 @@ def replyReview(request):
             date=datetime.now(),
             user_id=user,
             review_id=models.Review.objects.get(rid=rid)
+        )
+
+        nid = genNotificationId()
+        models.NewCommentNotification.objects.create(
+            nid=nid,
+            content=content,
+            date=datetime.now(),
+            status=0,
+            user_id=user,
+            comment_id=models.Comment.objects.get(cid=cid)
         )
         return JsonResponse({
             'ret': 1
