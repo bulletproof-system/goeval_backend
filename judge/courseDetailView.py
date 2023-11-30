@@ -40,7 +40,7 @@ def collect(request):
 def detail(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyToken(token)
-    if authToken != SUCCESS or authToken != NO_AUTH_ERROR:
+    if authToken != SUCCESS and authToken != NO_AUTH_ERROR:
         return JsonResponse({'success': False,
                              'reason': 'TokenFail'
                              }, status=errorStatus)

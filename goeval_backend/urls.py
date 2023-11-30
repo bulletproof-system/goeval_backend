@@ -23,7 +23,7 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
-FERFIX = ''
+FERFIX = 'm1/3441811-0-default/'
 
 urlpatterns = [
     path(FERFIX + 'admin/', admin.site.urls),
