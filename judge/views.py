@@ -463,12 +463,13 @@ def uploadAvatar(request):
                              'reason': 'userInfo.operate.avatar.size'
                              })
 
-    FileSystemStorage(location=BASE_DIR).save(user.uid, pic)
-    user.avatar = PIC_DIR + pic_name
+    suffix = '.' + pic_name.split('.')[1]
+    FileSystemStorage(location=BASE_DIR).save(str(user.uid) + suffix, pic)
+    user.avatar = PIC_DIR + str(user.uid) + suffix
     user.save()
     return JsonResponse({
         'success': True,
-        'avatar': PIC_DIR + username + pic_name
+        'avatar': PIC_DIR + str(user.uid) + suffix
     })
 
 
