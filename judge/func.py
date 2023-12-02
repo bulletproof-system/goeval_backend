@@ -21,13 +21,16 @@ headers = {
 }
 
 
-# BASE_DIR = '.\\judge\\asset\\image'
-BASE_DIR = '/asset/image'
-defaultAvatar = 'cute Tiger'
+BASE_DIR = '.\\judge\\asset\\image'
+# BASE_DIR = '/asset/image'
+DEFAULT_AVATAR = 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor'
 manager = 2
 normalUser = 1
 visitor = 0
 managerEmail = '1728901409@qq.com'
+# DEFAULT_AVATAR = 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor
+# '
+
 
 errorStatus = 401
 successStatus = 200
@@ -152,7 +155,7 @@ def isLegalUN(username):
         return True
     return False
 
-FILE_REG = '^\w*\.(jpeg|png|gif)'
+FILE_REG = '^\w*\.(jpeg|png|gif|jpg)'
 def isLegalAvatar(pic_name):
     return check_string(FILE_REG, pic_name)
 
@@ -212,8 +215,12 @@ def verifyToken(token):
     if len(token) == 0:
         return NO_TOKEN_ERROR
 
-    token = token.split()[1]
+
+    token = token.split()
+    if len(token) < 2:
+        return NO_TOKEN_ERROR
     # 如果解析错误那么返回游客信息
+    token = token[1]
     try:
         userInfo = jwt.decode(token,
                               "secret",
@@ -278,7 +285,7 @@ def getComments(rid):
         username = comment.user_id.username
         avatar = comment.user_id.avatar
         comInfo.append({
-            'cid': comment.cid,
+            'id': comment.cid,
             'username': username,
             'avatar': avatar,
             'datetime': comment.date,
@@ -329,50 +336,45 @@ def screenCourses(obj):
     school = obj.get('school', None)
     teacher = obj.get('teacher', None)
     tag = obj.get('tag', None)
+    print(tag)
     courses = models.Course.objects.all()
-
+    newCourses = []
     if cid is not None:
-        newCourses = []
+
         for course in courses:
             if str(cid) in str(course.cid):
                 newCourses.append(course)
-        courses = newCourses
+
 
     if name is not None:
-        newCourses = []
         for course in courses:
             if name in course.name:
                 newCourses.append(course)
-        courses = newCourses
+
 
     if school is not None:
-        newCourses = []
         for course in courses:
             if school in course.school:
                 newCourses.append(course)
-        courses = newCourses
 
     if teacher is not None:
-        newCourses = []
         for course in courses:
             teachers = getTeachers(course.cid)
             for item in teachers:
                 if teacher in item:
                     newCourses.append(course)
                     break
-        courses = newCourses
 
     if tag is not None:
-        newCourses = []
         for course in courses:
             tags = getTags(course.cid)
             for item in tags:
+                print(tag)
                 if tag in item:
                     newCourses.append(course)
                     break
-        courses = newCourses
 
-    return courses
+    return newCourses
 
 
 def screenAnnouncement(obj):
@@ -414,5 +416,14 @@ def getCourseInfo(course):
         'tag': getTags(course.cid),
         'description': course.description
     }
+
+def collected(cid, uid):
+    if cid is None or uid is None:
+        return False
+
+    if models.Star.objects.filter(user_id=uid,course_id=cid):
+        return True
+    else:
+        return False
 
 

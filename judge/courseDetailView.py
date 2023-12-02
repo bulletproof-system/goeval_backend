@@ -18,8 +18,16 @@ import random
 from .func import *
 
 def collect(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyToken(token)
+    if authToken != SUCCESS:
+        return JsonResponse({'success': False,
+                             'reason': 'TokenFail'
+                             }, status=errorStatus)
+
     obj = json.loads(request.body)
-    username = obj.get('username', None)
+    username = getUserInfo(token).get('username')
+
     cid = obj.get('id', None)
     uid = models.User.objects.get(username=username).uid
     star = models.Star.objects.filter(user_id=uid, course_id=cid)
@@ -40,13 +48,19 @@ def collect(request):
 def detail(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyToken(token)
-    if authToken != SUCCESS and authToken != NO_AUTH_ERROR:
+    if authToken == FORMAT_TOKEN_ERROR:
         return JsonResponse({'success': False,
                              'reason': 'TokenFail'
                              }, status=errorStatus)
 
-    username = getUserInfo(token).get('username')
-    uid = models.User.objects.get(username=username).uid
+    if authToken != NO_TOKEN_ERROR:
+        username = getUserInfo(token).get('username')
+    else:
+        username = None
+    if username is not None:
+        uid = models.User.objects.get(username=username).uid
+    else:
+        uid = None
     obj = json.loads(request.body)
     cid = obj.get('id', None)
     course = models.Course.objects.get(cid=cid)
@@ -62,6 +76,7 @@ def detail(request):
         'teacher': teachers,
         'tag': tagsInfo,
         'description': course.description,
+        'collected': collected(cid,uid),
         'reviews': revJsons
     })
 

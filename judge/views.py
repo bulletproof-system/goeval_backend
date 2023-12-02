@@ -84,7 +84,7 @@ def Register(request):
     while models.User.objects.filter(uid=uid).exists():
         uid = random.randint(1, 10000)
 
-    avatar = defaultAvatar
+    avatar = DEFAULT_AVATAR
     permission = normalUser
 
     if uid is None or not isLegalUN(username) or not isLegalPW(password):
@@ -118,7 +118,7 @@ def Register(request):
         'success': True,
         'info': {
             'token': token,
-            'userinfo':
+            'userInfo':
                 {'username': username,
                  'avatar': avatar,
                  'email': email,
@@ -211,22 +211,26 @@ def recCourse(request):
 def seaCourse(request):
     obj = json.loads(request.body)
     key = obj.get('key', None)
-    courses = models.Course.objects.all()
+
     res = []
+    search = {
+        'cid': key,
+        'name': key,
+        'school': key,
+        'teacher': key,
+        'tag': key
+    }
+    courses = screenCourses(search)
+
     for course in courses:
         cid = course.cid
-        name = course.name
-        school = course.school
-        set = str(cid) + name + school
-        if key in set:
-            cid = course.cid
-            teachers = getTeachers(cid)
-            tagsInfo = getTags(cid)
-            res.append({'id': course.cid,
-                        'name': course.name,
-                        'school': course.school,
-                        'teacher': teachers,
-                        'tag': tagsInfo})
+        teachers = getTeachers(cid)
+        tagsInfo = getTags(cid)
+        res.append({'id': course.cid,
+                    'name': course.name,
+                    'school': course.school,
+                    'teacher': teachers,
+                    'tag': tagsInfo})
 
     return JsonResponse(res, safe=False)
 
@@ -270,9 +274,6 @@ def autocomplete(request):
     return JsonResponse(res, safe=False)
 
 
-
-
-
 def acqAnnouncement(request):
     announcements = []
     for announcement in models.Announcement.objects.all():
@@ -289,11 +290,14 @@ def acqAnnouncement(request):
 def acqNotification(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyToken(token)
+
+    if authToken == NO_TOKEN_ERROR:
+        return JsonResponse([],safe=False)
+
     if authToken != SUCCESS:
         return JsonResponse({'success': False,
                              'reason': 'TokenFail'
                              }, status=errorStatus)
-
 
     userInfo = getUserInfo(token)
     username = userInfo.get("username")
@@ -339,7 +343,6 @@ def acqNotification(request):
             'ntype': ntype
         })
 
-
     # data = json.loads(resInfo)
     # sorted_data = sorted(data, cmp=lambda x, y: (
     #     x[datetime] < y[datetime] if x[status] == y[status] else y[status] - x[status]))
@@ -367,7 +370,7 @@ def signRead(request):
     notification.status = 1
     notification.save()
     return JsonResponse({
-        'success': "True"
+        'success': True
     })
 
 
@@ -459,7 +462,6 @@ def uploadAvatar(request):
                              'reason': 'userInfo.operate.avatar.size'
                              })
 
-
     FileSystemStorage(location=BASE_DIR).save(pic.name, pic)
     return JsonResponse({
         'success': True
@@ -468,7 +470,6 @@ def uploadAvatar(request):
 
 def getStarList(request):
     token = request.META.get('HTTP_AUTHORIZATION')
-
 
     authToken = verifyToken(token)
 
@@ -486,8 +487,3 @@ def getStarList(request):
     starList = getUserStarList(user_id)
 
     return JsonResponse(starList, safe=False)
-
-
-
-
-
