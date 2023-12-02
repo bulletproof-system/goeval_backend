@@ -194,7 +194,7 @@ def acqCourse(request):
             'total': total,
             'page_total': actual_page,
             'page': page,
-            'courselist': None
+            'courselist': []
         })
 
 

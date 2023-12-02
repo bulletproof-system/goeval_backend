@@ -449,7 +449,7 @@ def uploadAvatar(request):
                              }, status=errorStatus)
     if not os.path.exists(BASE_DIR):
         os.mkdir(BASE_DIR)
-
+    username = getUserInfo(token).get('username')
     pic = request.FILES["file"]
     pic_name = pic.name
     if not isLegalAvatar(pic_name):
@@ -465,7 +465,7 @@ def uploadAvatar(request):
     FileSystemStorage(location=BASE_DIR).save(pic.name, pic)
     return JsonResponse({
         'success': True,
-        'avatar': PIC_DIR + pic_name
+        'avatar': PIC_DIR + username + pic_name
     })
 
 

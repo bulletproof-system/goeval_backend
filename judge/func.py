@@ -343,7 +343,8 @@ def screenCourses(obj):
     school = obj.get('school', None)
     teacher = obj.get('teacher', None)
     tag = obj.get('tag', None)
-    print(tag)
+    if cid is None and name is None and school is None and teacher is None and tag is None:
+        return models.Course.objects.all()
     courses = models.Course.objects.all()
     newCourses = []
     if cid is not None:
