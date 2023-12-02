@@ -450,6 +450,7 @@ def uploadAvatar(request):
     if not os.path.exists(BASE_DIR):
         os.mkdir(BASE_DIR)
     username = getUserInfo(token).get('username')
+    user = models.User.objects.get(username=username)
     pic = request.FILES["file"]
     pic_name = pic.name
     if not isLegalAvatar(pic_name):
@@ -462,7 +463,9 @@ def uploadAvatar(request):
                              'reason': 'userInfo.operate.avatar.size'
                              })
 
-    FileSystemStorage(location=BASE_DIR).save(pic.name, pic)
+    FileSystemStorage(location=BASE_DIR).save(user.uid, pic)
+    user.avatar = PIC_DIR + pic_name
+    user.save()
     return JsonResponse({
         'success': True,
         'avatar': PIC_DIR + username + pic_name
