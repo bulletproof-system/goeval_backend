@@ -20,10 +20,12 @@ headers = {
     'alg': "HS256",
 }
 
+PIC_DIR = 'http://47.93.249.150/asset/image/'
 
-BASE_DIR = '.\\judge\\asset\\image'
-# BASE_DIR = '/asset/image'
-DEFAULT_AVATAR = 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor'
+# BASE_DIR = '.\\judge\\asset\\image'
+BASE_DIR = '/asset/image'
+DEFAULT_AVATAR_VISITOR = 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor'
+DEFAULT_AVATAR_USER = 'https://dummyimage.com/100x100/00FF00/000000&text=User'
 manager = 2
 normalUser = 1
 visitor = 0
@@ -40,7 +42,7 @@ commentNotification = 1
 
 MAX_REVIEW_NUM = 10000
 
-FILE_MAX_SIZE = 2 * 1024 * 1024 #2MB
+FILE_MAX_SIZE = 2 * 1024 * 1024  # 2MB
 
 MANAGER_INVAILD = JsonResponse({
     'success': False,
@@ -83,11 +85,14 @@ def genAnnouncementId():
         return 1
     return announcements[0].aid + 1
 
+
 def genNotificationId():
     notifications = models.Notification.objects.all().order_by('-nid')
     if len(notifications) == 0:
         return 1
     return notifications[0].nid + 1
+
+
 def getTeachers(cid):
     coTes = models.CourseTeacher.objects.filter(course_id=cid)
     teachers = []
@@ -96,7 +101,6 @@ def getTeachers(cid):
         teacher = models.Teacher.objects.get(tid=teacher_id)
         teachers.append(teacher.teacher_name)
     return teachers
-
 
 
 def getTags(cid):
@@ -155,9 +159,13 @@ def isLegalUN(username):
         return True
     return False
 
+
 FILE_REG = '^\w*\.(jpeg|png|gif|jpg)'
+
+
 def isLegalAvatar(pic_name):
     return check_string(FILE_REG, pic_name)
+
 
 NO_TOKEN_ERROR = 0
 FORMAT_TOKEN_ERROR = 1
@@ -214,7 +222,6 @@ def verifyManager(token):
 def verifyToken(token):
     if len(token) == 0:
         return NO_TOKEN_ERROR
-
 
     token = token.split()
     if len(token) < 2:
@@ -345,12 +352,10 @@ def screenCourses(obj):
             if str(cid) in str(course.cid):
                 newCourses.append(course)
 
-
     if name is not None:
         for course in courses:
             if name in course.name:
                 newCourses.append(course)
-
 
     if school is not None:
         for course in courses:
@@ -417,13 +422,12 @@ def getCourseInfo(course):
         'description': course.description
     }
 
+
 def collected(cid, uid):
     if cid is None or uid is None:
         return False
 
-    if models.Star.objects.filter(user_id=uid,course_id=cid):
+    if models.Star.objects.filter(user_id=uid, course_id=cid):
         return True
     else:
         return False
-
-

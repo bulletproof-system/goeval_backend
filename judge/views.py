@@ -84,7 +84,7 @@ def Register(request):
     while models.User.objects.filter(uid=uid).exists():
         uid = random.randint(1, 10000)
 
-    avatar = DEFAULT_AVATAR
+    avatar = DEFAULT_AVATAR_USER
     permission = normalUser
 
     if uid is None or not isLegalUN(username) or not isLegalPW(password):
@@ -122,7 +122,7 @@ def Register(request):
                 {'username': username,
                  'avatar': avatar,
                  'email': email,
-                 'role': 0
+                 'role': permission
                  }
         },
         'reason': None
@@ -464,7 +464,8 @@ def uploadAvatar(request):
 
     FileSystemStorage(location=BASE_DIR).save(pic.name, pic)
     return JsonResponse({
-        'success': True
+        'success': True,
+        'avatar': PIC_DIR + pic_name
     })
 
 
