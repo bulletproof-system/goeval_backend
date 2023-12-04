@@ -41,7 +41,7 @@ def getUserList(request):
             'now': user_sum,
             'page_total': actual_page,
             'page': page,
-            'userlist': None
+            'userlist': []
         })
 
     if page > actual_page:
@@ -356,7 +356,7 @@ def acqAnnouncement(request):
             'total': 0,
             'page_total': actual_page,
             'page': page,
-            'announcementlist': None
+            'announcementlist': []
         })
 
 
