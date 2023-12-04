@@ -220,7 +220,7 @@ def seaCourse(request):
         'teacher': key,
         'tag': key
     }
-    courses = screenCourses(search)
+    courses = seaCourses(search)
 
     for course in courses:
         cid = course.cid

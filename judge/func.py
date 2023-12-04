@@ -52,6 +52,14 @@ MANAGER_INVAILD = JsonResponse({
     'reason': 'manage.invalid'
 })
 
+JSON_SUCCESS = JsonResponse({
+    'success': True
+})
+
+JSON_FAIL = JsonResponse({
+    'success': False
+})
+
 
 def genReviewId():
     rids = models.Review.objects.all().order_by('-rid')
@@ -95,6 +103,12 @@ def genNotificationId():
         return 1
     return notifications[0].nid + 1
 
+
+def genTagId():
+    tags = models.Tag.objects.all().order_by('-tid')
+    if len(tags) == 0:
+        return 1
+    return tags[0].tid + 1
 
 def getTeachers(cid):
     coTes = models.CourseTeacher.objects.filter(course_id=cid)
@@ -310,28 +324,28 @@ def screenUser(obj):
     email = obj.get('email', None)
     role = obj.get('role', None)
     users = models.User.objects.all()
-    if uid is not None:
+    if uid is not None and len(uid):
         newUsers = []
         for user in users:
             if str(uid) in str(user.uid):
                 newUsers.append(user)
         users = newUsers
 
-    if username is not None:
+    if username is not None and len(username):
         newUsers = []
         for user in users:
             if username in user.username:
                 newUsers.append(user)
         users = newUsers
 
-    if email is not None:
+    if email is not None and len(email):
         newUsers = []
         for user in users:
             if email in user.email:
                 newUsers.append(user)
         users = newUsers
 
-    if role is not None:
+    if role is not None and len(role):
         newUsers = []
         for user in users:
             if role == user.permission:
@@ -339,8 +353,59 @@ def screenUser(obj):
         users = newUsers
     return users
 
-
 def screenCourses(obj):
+    cid = obj.get('cid', None)
+    name = obj.get('name', None)
+    school = obj.get('school', None)
+    teacher = obj.get('teacher', None)
+    tag = obj.get('tag', None)
+    courses = models.Course.objects.all()
+
+    if cid is not None and len(cid):
+        newCourses = []
+        for course in courses:
+            if str(cid) in str(course.cid):
+                newCourses.append(course)
+        courses = newCourses
+    if name is not None and len(name):
+        newCourses = []
+        for course in courses:
+            if name in course.name:
+                newCourses.append(course)
+        courses = newCourses
+
+    if school is not None and len(school):
+        newCourses = []
+        for course in courses:
+            if school in course.school:
+                newCourses.append(course)
+        courses = newCourses
+
+    if teacher is not None and len(teacher):
+        newCourses = []
+        for course in courses:
+            teachers = getTeachers(course.cid)
+            for item in teachers:
+                if teacher in item:
+                    newCourses.append(course)
+                    break
+        courses = newCourses
+
+    if tag is not None and len(tag):
+        newCourses = []
+        for course in courses:
+            tags = getTags(course.cid)
+            for item in tags:
+                print(tag)
+                if tag in item:
+                    newCourses.append(course)
+                    break
+        courses = newCourses
+
+    return courses
+
+
+def seaCourses(obj):
     cid = obj.get('cid', None)
     name = obj.get('name', None)
     school = obj.get('school', None)
@@ -350,23 +415,23 @@ def screenCourses(obj):
         return models.Course.objects.all()
     courses = models.Course.objects.all()
     newCourses = []
-    if cid is not None:
+    if cid is not None and len(cid):
 
         for course in courses:
             if str(cid) in str(course.cid):
                 newCourses.append(course)
 
-    if name is not None:
+    if name is not None and len(name):
         for course in courses:
             if name in course.name:
                 newCourses.append(course)
 
-    if school is not None:
+    if school is not None and len(school):
         for course in courses:
             if school in course.school:
                 newCourses.append(course)
 
-    if teacher is not None:
+    if teacher is not None and len(teacher):
         for course in courses:
             teachers = getTeachers(course.cid)
             for item in teachers:
@@ -374,7 +439,7 @@ def screenCourses(obj):
                     newCourses.append(course)
                     break
 
-    if tag is not None:
+    if tag is not None and len(tag):
         for course in courses:
             tags = getTags(course.cid)
             for item in tags:
@@ -393,20 +458,20 @@ def screenAnnouncement(obj):
 
     announcements = models.Announcement.objects.all()
 
-    if aid is not None:
+    if aid is not None and len(aid):
         newAnnounces = []
         for announcement in announcements:
             if str(aid) in str(announcement.aid):
                 newAnnounces.append(announcement)
         announcements = newAnnounces
-    if title is not None:
+    if title is not None and len(title):
         newAnnounces = []
         for announcement in announcements:
             if title in announcement.title:
                 newAnnounces.append(announcement)
         announcements = newAnnounces
 
-    if content is not None:
+    if content is not None and len(content):
         newAnnounces = []
         for announcement in announcements:
             if content in announcement.content:
@@ -414,6 +479,53 @@ def screenAnnouncement(obj):
         announcements = newAnnounces
 
     return announcements
+
+def screenTeacher(obj):
+    tid = obj.get('tid', None)
+    name = obj.get('name', None)
+
+    teachers = models.Teacher.objects.all()
+
+    if tid is not None and len(tid):
+        newTeachers = []
+        for teacher in teachers:
+            if str(tid) in str(teacher.tid):
+                newTeachers.append(teacher)
+
+        teachers = newTeachers
+
+    if name is not None and len(name):
+        newTeachers = []
+        for teacher in teachers:
+            if name in teacher.teacher_name:
+                newTeachers.append(teacher)
+        teachers = newTeachers
+
+    return teachers
+
+
+def screenTags(obj):
+    tid = obj.get('tid', None)
+    name = obj.get('name', None)
+
+    tags = models.Tag.objects.all()
+
+    if tid is not None and len(tid):
+        newTags = []
+        for tag in tags:
+            if str(tid) in str(tag.tid):
+                newTags.append(tag)
+
+        tags = newTags
+
+    if name is not None and len(name):
+        newTags = []
+        for tag in tags:
+            if name in tag.teacher_name:
+                newTags.append(tag)
+        tags = newTags
+
+    return tags
 
 
 def getCourseInfo(course):
@@ -435,3 +547,5 @@ def collected(cid, uid):
         return True
     else:
         return False
+
+

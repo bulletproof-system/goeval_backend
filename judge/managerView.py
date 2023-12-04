@@ -20,7 +20,6 @@ import math
 
 
 def getUserList(request):
-
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyManager(token)
     if authToken != MANAGER_AUTH:
@@ -34,7 +33,7 @@ def getUserList(request):
     users = screenUser(obj)
 
     user_sum = len(users)
-    actual_page =math.ceil(user_sum / page_size)
+    actual_page = math.ceil(user_sum / page_size)
     if actual_page == 0:
         return JsonResponse({
             'all': all,
@@ -48,9 +47,9 @@ def getUserList(request):
         page = actual_page
 
     if page == actual_page:
-        page_users = users[page_size * (page - 1) : ]
+        page_users = users[page_size * (page - 1):]
     else:
-        page_users = users[page_size * (page - 1) : page_size * page]
+        page_users = users[page_size * (page - 1): page_size * page]
     page_total = actual_page
 
     usersInfo = []
@@ -62,8 +61,9 @@ def getUserList(request):
         'now': user_sum,
         'page_total': page_total,
         'page': page,
-        'userlist':usersInfo
+        'userlist': usersInfo
     })
+
 
 def deleteUser(request):
     token = request.META.get('HTTP_AUTHORIZATION')
@@ -91,6 +91,7 @@ def deleteUser(request):
         'success': True
     })
 
+
 def modifyRole(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyManager(token)
@@ -113,6 +114,7 @@ def modifyRole(request):
     return JsonResponse({
         'success': True
     })
+
 
 def modifyEmail(request):
     token = request.META.get('HTTP_AUTHORIZATION')
@@ -175,6 +177,7 @@ def modifyPasswd(request):
         'success': True
     })
 
+
 def acqCourse(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyManager(token)
@@ -196,7 +199,6 @@ def acqCourse(request):
             'page': page,
             'courselist': []
         })
-
 
     if page > actual_page:
         page = actual_page
@@ -255,7 +257,7 @@ def updateCourse(request):
     name = obj.get('name', None)
     school = obj.get('school', None)
     teachers = obj.get('teacher', None)
-    tags  = obj.get('tag', None)
+    tags = obj.get('tag', None)
     description = obj.get('description', None)
 
     if cid is None:
@@ -293,6 +295,7 @@ def updateCourse(request):
         'success': True
     })
 
+
 def addCourse(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyManager(token)
@@ -304,7 +307,6 @@ def addCourse(request):
     teachers = obj.get('teacher', None)
     tags = obj.get('tag', None)
     description = obj.get('description', None)
-
 
     cid = genCourseId()
     models.Course.objects.create(
@@ -333,7 +335,6 @@ def addCourse(request):
     })
 
 
-
 def acqAnnouncement(request):
     token = request.META.get('HTTP_AUTHORIZATION')
     authToken = verifyManager(token)
@@ -359,14 +360,13 @@ def acqAnnouncement(request):
             'announcementlist': []
         })
 
-
     if page > actual_page:
         page = actual_page
 
     if page == actual_page:
-        page_announcements = select_announcements[page_size * (page - 1) :]
+        page_announcements = select_announcements[page_size * (page - 1):]
     else:
-        page_announcements = select_announcements[page_size * (page - 1) : page_size * page]
+        page_announcements = select_announcements[page_size * (page - 1): page_size * page]
 
     announceInfo = []
 
@@ -405,6 +405,7 @@ def deleteAnnouncement(request):
     return JsonResponse({
         'success': True
     })
+
 
 def modifyAnnouncement(request):
     token = request.META.get('HTTP_AUTHORIZATION')
@@ -492,20 +493,231 @@ def getTagsList(request):
     return JsonResponse(tagInfo, safe=False)
 
 
+def acqTeacher(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+    page = obj.get('page', None)
+    page_size = obj.get('page_size', None)
+    all = models.Teacher.objects.all().count()
+    select_teachers = screenTeacher(obj)
+
+    total = len(select_teachers)
+
+    actual_page = math.ceil(total / page_size)
+
+    if actual_page == 0:
+        return JsonResponse({
+            'all': all,
+            'total': 0,
+            'page_total': actual_page,
+            'page': page,
+            'teacherlist': []
+        })
+
+    if page > actual_page:
+        page = actual_page
+
+    if page == actual_page:
+        page_teachers = select_teachers[page_size * (page - 1):]
+    else:
+        page_teachers = select_teachers[page_size * (page - 1): page_size * page]
+
+    teacherInfo = []
+
+    for teacher in page_teachers:
+        teacherInfo.append(teacher.getTeacherInfo())
+
+    return JsonResponse({
+        'all': all,
+        'total': total,
+        'page_total': actual_page,
+        'page': page,
+        'teacherlist': teacherInfo
+    })
 
 
+def deleteTeahcer(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+    tid = obj.get('tid')
+
+    if models.Teacher.objects.filter(tid=tid):
+        teacher = models.Teacher.objects.get(tid=tid)
+        teacher.delete()
+        return JsonResponse({
+            'success': True
+        })
+    else:
+        return JsonResponse({
+            'success': False
+        })
 
 
+def modifyTeacher(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+
+    tid = obj.get('tid')
+    name = obj.get('name')
+    if tid is None:
+        return JsonResponse({
+            'success': False
+        })
+
+    if models.Teacher.objects.filter(tid=tid):
+        teacher = models.Teacher.objects.get(tid=tid)
+        teacher.teacher_name = name
+        teacher.save()
+        return JsonResponse({
+            'success': True
+        })
+    else:
+        return JsonResponse({
+            'success': False
+        })
 
 
+def addTeacher(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+
+    name = obj.get('name')
+    if name is None:
+        return JSON_FAIL
+
+    tid = genTeacherId()
+
+    models.Teacher.objects.create(
+        tid=tid,
+        teacher_name=name
+    )
+
+    return JSON_SUCCESS
 
 
+def acqTags(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+    page = obj.get('page', None)
+    page_size = obj.get('page_size', None)
+    all = models.Tag.objects.all().count()
+    select_tags = screenTags(obj)
+
+    total = len(select_tags)
+
+    actual_page = math.ceil(total / page_size)
+
+    if actual_page == 0:
+        return JsonResponse({
+            'all': all,
+            'total': 0,
+            'page_total': actual_page,
+            'page': page,
+            'taglist': []
+        })
+
+    if page > actual_page:
+        page = actual_page
+
+    if page == actual_page:
+        page_tags = select_tags[page_size * (page - 1):]
+    else:
+        page_tags = select_tags[page_size * (page - 1): page_size * page]
+
+    tagInfo = []
+
+    for tag in page_tags:
+        tagInfo.append(tag.getInfo())
+
+    return JsonResponse({
+        'all': all,
+        'total': total,
+        'page_total': actual_page,
+        'page': page,
+        'taglist': tagInfo
+    })
 
 
+def deleleTag(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+
+    tid = obj.get('tid')
+    if tid is None:
+        return JSON_FAIL
+
+    if models.Tag.objects.filter(tid=tid):
+        tag = models.Tag.objects.get(tid=tid)
+        tag.delete()
+        return JSON_SUCCESS
+    else:
+        return JSON_FAIL
 
 
+def modifyTag(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
+
+    obj = json.loads(request.body)
+
+    tid = obj.get('tid')
+    name = obj.get('name')
+
+    if tid is None:
+        return JSON_FAIL
+
+    if models.Tag.objects.filter(tid=tid):
+        tag = models.Tag.objects.get(tid=tid)
+        tag.content = name
+        tag.save()
+        return JSON_SUCCESS
+    else:
+        return JSON_FAIL
 
 
+def addTag(request):
+    token = request.META.get('HTTP_AUTHORIZATION')
+    authToken = verifyManager(token)
+    if authToken != MANAGER_AUTH:
+        return returnAuthError()
 
+    obj = json.loads(request.body)
 
+    name = obj.get('name')
 
+    if name is None:
+        return JSON_FAIL
+
+    tid = genTagId()
+
+    models.Tag.objects.create(
+        tid=tid,
+        content=name
+    )
+    return JSON_SUCCESS

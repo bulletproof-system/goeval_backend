@@ -108,15 +108,21 @@ def review(request):
             course_id=models.Course.objects.get(cid=cid),
             rating=rating
         )
-        nid = genNotificationId()
-        models.NewReviewNotification.objects.create(
-            nid=nid,
-            content=models.Course.objects.get(cid=cid).name,
-            date=datetime.now(),
-            status=UNREAD,
-            user_id=models.User.objects.get(username=username),
-            review_id=models.Review.objects.get(rid=rid)
-        )
+
+        stars = models.Star.objects.filter(course_id=cid)
+        for star in stars:
+            user = star.user_id
+            if user.uid != uid:
+                nid = genNotificationId()
+                models.NewReviewNotification.objects.create(
+                    nid=nid,
+                    content=models.Course.objects.get(cid=cid).name,
+                    date=datetime.now(),
+                    status=UNREAD,
+                    user_id=user,
+                    review_id=models.Review.objects.get(rid=rid)
+                )
+
         return JsonResponse({
             'ret': 1
         })
@@ -158,15 +164,18 @@ def replyReview(request):
             review_id=models.Review.objects.get(rid=rid)
         )
 
-        nid = genNotificationId()
-        models.NewCommentNotification.objects.create(
-            nid=nid,
-            content=content,
-            date=datetime.now(),
-            status=UNREAD,
-            user_id=user,
-            comment_id=models.Comment.objects.get(cid=cid)
-        )
+        user_id = models.Review.objects.get(rid=rid).user_id.uid
+        if user.uid != user_id:
+            nid = genNotificationId()
+            models.NewCommentNotification.objects.create(
+                nid=nid,
+                content=content,
+                date=datetime.now(),
+                status=UNREAD,
+                user_id=user,
+                comment_id=models.Comment.objects.get(cid=cid)
+            )
+
         return JsonResponse({
             'ret': 1
         })

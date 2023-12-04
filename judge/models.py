@@ -40,6 +40,11 @@ class Teacher(models.Model):
     def __int__(self):
         return self.tid
 
+    def getTeacherInfo(self):
+        return {
+            'tid': self.tid,
+            'name': self.teacher_name
+        }
     class Meta:
         db_table = 'teacher'
 
@@ -66,6 +71,11 @@ class Tag(models.Model):
     def __int__(self):
         return self.tid
 
+    def getInfo(self):
+        return {
+            'tid': self.tid,
+            'name': self.content
+        }
     class Meta:
         db_table = 'tag'
 
