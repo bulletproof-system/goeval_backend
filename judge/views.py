@@ -465,8 +465,9 @@ def uploadAvatar(request):
                              })
 
     suffix = '.' + pic_name.split('.')[1]
-    if os.path.exists(BASE_DIR + str(user.uid) + suffix):
-        os.remove(BASE_DIR + str(user.uid) + suffix)
+    path_file = os.path.join(BASE_DIR, str(user.uid) + suffix)
+    if os.path.exists(path_file):
+        os.remove(path_file)
     FileSystemStorage(location=BASE_DIR).save(str(user.uid) + suffix, pic)
     user.avatar = PIC_DIR + str(user.uid) + suffix
     user.save()
