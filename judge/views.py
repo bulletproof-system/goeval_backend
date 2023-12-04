@@ -367,8 +367,9 @@ def signRead(request):
                             status=errorStatus)
 
     notification = models.Notification.objects.get(nid=nid)
-    notification.status = 1
-    notification.save()
+    if notification.nid != 1:
+        notification.status = 1
+        notification.save()
     return JsonResponse({
         'success': True
     })
@@ -464,6 +465,8 @@ def uploadAvatar(request):
                              })
 
     suffix = '.' + pic_name.split('.')[1]
+    if os.path.exists(BASE_DIR + str(user.uid) + suffix):
+        os.remove(BASE_DIR + str(user.uid) + suffix)
     FileSystemStorage(location=BASE_DIR).save(str(user.uid) + suffix, pic)
     user.avatar = PIC_DIR + str(user.uid) + suffix
     user.save()

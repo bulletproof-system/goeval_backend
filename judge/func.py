@@ -21,8 +21,8 @@ headers = {
 }
 
 PIC_DIR = 'http://47.93.249.150/asset/image/'
-
-# BASE_DIR = '.\\judge\\asset\\image'
+#
+# BASE_DIR = '.\\judge\\asset\\image\\'
 BASE_DIR = '/asset/image'
 DEFAULT_AVATAR_VISITOR = 'http://dummyimage.com/100x100/FF0000/000000&text=Visitor'
 DEFAULT_AVATAR_USER = 'https://dummyimage.com/100x100/00FF00/000000&text=User'
