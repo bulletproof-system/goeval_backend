@@ -465,15 +465,15 @@ def uploadAvatar(request):
                              })
 
     suffix = '.' + pic_name.split('.')[1]
-    path_file = os.path.join(BASE_DIR, str(user.uid) + suffix)
-    if os.path.exists(path_file):
-        os.remove(path_file)
-    FileSystemStorage(location=BASE_DIR).save(str(user.uid) + suffix, pic)
-    user.avatar = PIC_DIR + str(user.uid) + suffix
+    prefix = str(user.uid)
+    file_name = FileSystemStorage.get_alternative_name(BASE_DIR, prefix, suffix)
+    FileSystemStorage(location=BASE_DIR).save(file_name, pic)
+    user.avatar = PIC_DIR + file_name
     user.save()
+
     return JsonResponse({
         'success': True,
-        'avatar': PIC_DIR + str(user.uid) + suffix
+        'avatar': PIC_DIR + file_name
     })
 
 
