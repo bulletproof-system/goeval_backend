@@ -113,7 +113,7 @@ def review(request):
             nid=nid,
             content=models.Course.objects.get(cid=cid).name,
             date=datetime.now(),
-            status=0,
+            status=UNREAD,
             user_id=models.User.objects.get(username=username),
             review_id=models.Review.objects.get(rid=rid)
         )
@@ -163,7 +163,7 @@ def replyReview(request):
             nid=nid,
             content=content,
             date=datetime.now(),
-            status=0,
+            status=UNREAD,
             user_id=user,
             comment_id=models.Comment.objects.get(cid=cid)
         )

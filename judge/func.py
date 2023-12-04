@@ -34,6 +34,9 @@ managerEmail = '1728901409@qq.com'
 # '
 
 
+READ = 0
+UNREAD = 1
+
 errorStatus = 401
 successStatus = 200
 

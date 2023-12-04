@@ -367,8 +367,8 @@ def signRead(request):
                             status=errorStatus)
 
     notification = models.Notification.objects.get(nid=nid)
-    if notification.nid != 1:
-        notification.status = 1
+    if notification.nid != UNREAD:
+        notification.status = READ
         notification.save()
     return JsonResponse({
         'success': True
