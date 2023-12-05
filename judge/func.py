@@ -324,7 +324,7 @@ def screenUser(obj):
     email = obj.get('email', None)
     role = obj.get('role', None)
     users = models.User.objects.all()
-    if uid is not None:
+    if uid is not None and len(str(uid)):
         newUsers = []
         for user in users:
             if str(uid) in str(user.uid):
@@ -345,7 +345,7 @@ def screenUser(obj):
                 newUsers.append(user)
         users = newUsers
 
-    if role is not None:
+    if role is not None and len(str(role)):
         newUsers = []
         for user in users:
             if role == user.permission:
@@ -361,7 +361,7 @@ def screenCourses(obj):
     tag = obj.get('tag', None)
     courses = models.Course.objects.all()
 
-    if cid is not None:
+    if cid is not None and len(str(cid)):
         newCourses = []
         for course in courses:
             if str(cid) in str(course.cid):
@@ -415,7 +415,7 @@ def seaCourses(obj):
         return models.Course.objects.all()
     courses = models.Course.objects.all()
     newCourses = []
-    if cid is not None:
+    if cid is not None and len(str(cid)):
 
         for course in courses:
             if str(cid) in str(course.cid):
@@ -458,7 +458,7 @@ def screenAnnouncement(obj):
 
     announcements = models.Announcement.objects.all()
 
-    if aid is not None:
+    if aid is not None and len(str(aid)):
         newAnnounces = []
         for announcement in announcements:
             if str(aid) in str(announcement.aid):
@@ -486,7 +486,7 @@ def screenTeacher(obj):
 
     teachers = models.Teacher.objects.all()
 
-    if tid is not None:
+    if tid is not None and len(str(tid)):
         newTeachers = []
         for teacher in teachers:
             if str(tid) in str(teacher.tid):
@@ -510,7 +510,7 @@ def screenTags(obj):
 
     tags = models.Tag.objects.all()
 
-    if tid is not None:
+    if tid is not None and len(str(tid)):
         newTags = []
         for tag in tags:
             if str(tid) in str(tag.tid):
