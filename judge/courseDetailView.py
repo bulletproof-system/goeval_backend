@@ -164,15 +164,15 @@ def replyReview(request):
             review_id=models.Review.objects.get(rid=rid)
         )
 
-        user_id = models.Review.objects.get(rid=rid).user_id.uid
-        if user.uid != user_id:
+        review_user = models.Review.objects.get(rid=rid).user_id
+        if user.uid != review_user.uid:
             nid = genNotificationId()
             models.NewCommentNotification.objects.create(
                 nid=nid,
                 content=content,
                 date=datetime.now(),
                 status=UNREAD,
-                user_id=user,
+                user_id=review_user,
                 comment_id=models.Comment.objects.get(cid=cid)
             )
 
