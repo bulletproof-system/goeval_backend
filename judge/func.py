@@ -345,7 +345,7 @@ def screenUser(obj):
                 newUsers.append(user)
         users = newUsers
 
-    if role is not None and len(role):
+    if role is not None:
         newUsers = []
         for user in users:
             if role == user.permission:
