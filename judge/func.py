@@ -177,7 +177,7 @@ def isLegalUN(username):
     return False
 
 
-FILE_REG = '^\w*\.(jpeg|png|gif|jpg)'
+FILE_REG = '^[^\s\.]*\.(jpeg|png|gif|jpg)'
 
 
 def isLegalAvatar(pic_name):
