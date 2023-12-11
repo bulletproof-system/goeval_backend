@@ -404,6 +404,7 @@ def screenCourses(obj):
 
     return courses
 
+MAXMUM = 6
 
 def seaCourses(obj):
     cid = obj.get('cid', None)
@@ -414,38 +415,49 @@ def seaCourses(obj):
     if cid is None and name is None and school is None and teacher is None and tag is None:
         return models.Course.objects.all()
     courses = models.Course.objects.all()
+
+    count = 0
     newCourses = []
     if cid is not None and len(str(cid)):
 
         for course in courses:
-            if str(cid) in str(course.cid):
+            if str(cid) in str(course.cid) and count < MAXMUM:
                 newCourses.append(course)
+                count = count + 1
 
+    count = 0;
     if name is not None and len(name):
         for course in courses:
-            if name in course.name:
+            if name in course.name and count < MAXMUM:
                 newCourses.append(course)
+                count = count + 1
 
+    count = 0
     if school is not None and len(school):
         for course in courses:
-            if school in course.school:
+            if school in course.school and count < MAXMUM:
                 newCourses.append(course)
+                count = count + 1
 
+    count = 0
     if teacher is not None and len(teacher):
-        for course in courses:
+        for course in courses and count < MAXMUM:
             teachers = getTeachers(course.cid)
             for item in teachers:
                 if teacher in item:
                     newCourses.append(course)
+                    count = count + 1
                     break
 
+    count = 0
     if tag is not None and len(tag):
-        for course in courses:
+        for course in courses and count < MAXMUM:
             tags = getTags(course.cid)
             for item in tags:
-                print(tag)
+
                 if tag in item:
                     newCourses.append(course)
+                    count = count + 1
                     break
 
     return newCourses
