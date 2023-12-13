@@ -240,32 +240,42 @@ def autocomplete(request):
     key = obj.get('key', None)
     res = []
     courses = models.Course.objects.all()
+
+    courseCount = 0
+    schoolCount = 0
     for course in courses:
         name = course.name
-        if key in name:
+        if key in name and courseCount < MAXMUM:
+            courseCount = courseCount + 1
             res.append({
                 'type': 0,
                 'value': name
             })
+
         school = course.school
-        if key in school:
+        if key in school and schoolCount < MAXMUM:
+            schoolCount = schoolCount + 1
             res.append({
                 'type': 1,
                 'value': school
             })
+    count = 0
     teachers = models.Teacher.objects.all()
     for teacher in teachers:
         teacher_name = teacher.teacher_name
-        if key in teacher_name:
+        if key in teacher_name and count < MAXMUM:
+            count = count + 1
             res.append({
                 'type': 2,
                 'value': teacher_name
             })
 
+    count = 0
     tags = models.Tag.objects.all()
     for tag in tags:
         content = tag.content
-        if key in content:
+        if key in content and count < MAXMUM:
+            count = count + 1
             res.append({
                 'type': 3,
                 'value': content

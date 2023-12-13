@@ -110,6 +110,7 @@ def genTagId():
         return 1
     return tags[0].tid + 1
 
+
 def getTeachers(cid):
     coTes = models.CourseTeacher.objects.filter(course_id=cid)
     teachers = []
@@ -353,6 +354,7 @@ def screenUser(obj):
         users = newUsers
     return users
 
+
 def screenCourses(obj):
     cid = obj.get('cid', None)
     name = obj.get('name', None)
@@ -404,7 +406,9 @@ def screenCourses(obj):
 
     return courses
 
+
 MAXMUM = 6
+
 
 def seaCourses(obj):
     cid = obj.get('cid', None)
@@ -425,7 +429,7 @@ def seaCourses(obj):
                 newCourses.append(course)
                 count = count + 1
 
-    count = 0;
+    count = 0
     if name is not None and len(name):
         for course in courses:
             if name in course.name and count < MAXMUM:
@@ -440,25 +444,26 @@ def seaCourses(obj):
                 count = count + 1
 
     count = 0
-    if teacher is not None and len(teacher) and count < MAXMUM:
+    if teacher is not None and len(teacher):
         for course in courses:
-            teachers = getTeachers(course.cid)
-            for item in teachers:
-                if teacher in item:
-                    newCourses.append(course)
-                    count = count + 1
-                    break
+            if count < MAXMUM:
+                teachers = getTeachers(course.cid)
+                for item in teachers:
+                    if teacher in item:
+                        newCourses.append(course)
+                        count = count + 1
+                        break
 
     count = 0
-    if tag is not None and len(tag) and count < MAXMUM:
+    if tag is not None and len(tag):
         for course in courses:
-            tags = getTags(course.cid)
-            for item in tags:
-
-                if tag in item:
-                    newCourses.append(course)
-                    count = count + 1
-                    break
+            if count < MAXMUM:
+                tags = getTags(course.cid)
+                for item in tags:
+                    if tag in item:
+                        newCourses.append(course)
+                        count = count + 1
+                        break
 
     return newCourses
 
@@ -491,6 +496,7 @@ def screenAnnouncement(obj):
         announcements = newAnnounces
 
     return announcements
+
 
 def screenTeacher(obj):
     tid = obj.get('tid', None)
@@ -559,5 +565,3 @@ def collected(cid, uid):
         return True
     else:
         return False
-
-
