@@ -440,8 +440,8 @@ def seaCourses(obj):
                 count = count + 1
 
     count = 0
-    if teacher is not None and len(teacher):
-        for course in courses and count < MAXMUM:
+    if teacher is not None and len(teacher) and count < MAXMUM:
+        for course in courses:
             teachers = getTeachers(course.cid)
             for item in teachers:
                 if teacher in item:
@@ -450,8 +450,8 @@ def seaCourses(obj):
                     break
 
     count = 0
-    if tag is not None and len(tag):
-        for course in courses and count < MAXMUM:
+    if tag is not None and len(tag) and count < MAXMUM:
+        for course in courses:
             tags = getTags(course.cid)
             for item in tags:
 
