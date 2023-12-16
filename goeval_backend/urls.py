@@ -16,8 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+from restapi import views
 
+router = routers.DefaultRouter()
+router.register(r'users', views.UserViewSet)
+router.register(r'groups', views.GroupViewSet)
+
+# FERFIX = 'm1/3441811-0-default/'
+FERFIX = ''
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('user/', include('user.urls')),
+    path(FERFIX + 'admin/', admin.site.urls),
+    path(FERFIX + 'api/', include('judge.urls')),
+    path(FERFIX + 'restapi/', include(router.urls)),
+    path(FERFIX + 'restapi-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
